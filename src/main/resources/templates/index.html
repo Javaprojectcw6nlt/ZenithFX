@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZenithFX — Forex Intelligence</title><link rel="stylesheet" href="/css/zenith.css">
+</head>
+<body>
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<div th:replace="~{fragments :: header('home')}"></div>
+<main class="container">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="pulse"></span> FOREX TRADING PLATFORM</div>
+      <h1>Innovation meets<br><span class="gradient-text">financial freedom.</span></h1>
+      <p class="hero-sub">Real exchange rates, market insights and practical trading tools — brought together in one focused workspace.</p>
+      <div class="hero-actions"><a class="btn btn-primary" href="/prices">Explore markets <span>↗</span></a><a class="btn btn-ghost" href="/soap">View exchange rates</a></div>
+      <div class="hero-proof"><div class="proof-avatars"><b>S</b><b>FX</b><b>◎</b></div><span>Market tools. One clean dashboard.</span></div>
+    </div>
+    <div class="hero-visual">
+      <div class="visual-orbit orbit-a"></div><div class="visual-orbit orbit-b"></div>
+      <div class="floating-chip chip-top"><span class="chip-dot"></span> MARKET WATCH <strong>ACTIVE</strong></div>
+      <div class="chart-card">
+        <div class="chart-card-head"><div><small>MARKET OVERVIEW</small><h3>EUR / USD</h3></div><span class="tag-positive">+0.32%</span></div>
+        <div class="chart-price">1.0824 <span>USD</span></div>
+        <svg class="hero-chart" viewBox="0 0 440 180" role="img" aria-label="Decorative market line chart"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a78bfa" stop-opacity=".32"/><stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></linearGradient></defs><path d="M0 145 C28 138 36 112 63 124 S94 147 118 100 S151 113 176 84 S215 115 240 73 S280 89 302 58 S333 82 356 39 S391 61 440 15 L440 180 L0 180 Z" fill="url(#fill)"/><path d="M0 145 C28 138 36 112 63 124 S94 147 118 100 S151 113 176 84 S215 115 240 73 S280 89 302 58 S333 82 356 39 S391 61 440 15" fill="none" stroke="#b59aff" stroke-width="3" stroke-linecap="round"/></svg>
+        <div class="chart-ticks"><span>09:00</span><span>12:00</span><span>15:00</span><span>18:00</span><span>NOW</span></div>
+      </div>
+      <div class="floating-chip chip-bottom"><span class="chip-icon">↗</span><div><small>MARKET MOMENTUM</small><strong>Data-driven decisions</strong></div></div>
+    </div>
+  </section>
+  <section class="section-heading"><div><span class="eyebrow">YOUR TOOLKIT</span><h2>Everything you need, in one place.</h2></div><p>Explore each module from the navigation above.</p></section>
+  <section class="feature-grid">
+    <a class="feature-card" href="/soap"><span class="feature-icon purple">◷</span><div class="feature-title">HNB Exchange Rates <span>↗</span></div><p>Historical currency rates from the Hungarian National Bank SOAP service.</p><small>SOAP · CHART.JS</small></a>
+    <a class="feature-card" href="/account"><span class="feature-icon blue">▤</span><div class="feature-title">Forex Account <span>↗</span></div><p>Review your OANDA practice account summary and balance.</p><small>OANDA API</small></a>
+    <a class="feature-card" href="/prices"><span class="feature-icon pink">⌁</span><div class="feature-title">Live Prices <span>↗</span></div><p>Request current bid and ask prices for selected instruments.</p><small>MARKET DATA</small></a>
+    <a class="feature-card" href="/history"><span class="feature-icon cyan">▥</span><div class="feature-title">Price History <span>↗</span></div><p>Inspect the latest ten candles for an instrument and granularity.</p><small>HISTORICAL DATA</small></a>
+    <a class="feature-card" href="/positions"><span class="feature-icon green">◎</span><div class="feature-title">Open Positions <span>↗</span></div><p>View current long and short positions held in the practice account.</p><small>TRADE MANAGEMENT</small></a>
+    <a class="feature-card" href="/trade"><span class="feature-icon orange">⇄</span><div class="feature-title">Trade Desk <span>↗</span></div><p>Open a practice market position or close a trade by Trade ID.</p><small>PRACTICE ACCOUNT ONLY</small></a>
+  </section>
+  <section class="notice"><span>ⓘ</span><p><strong>Academic practice environment.</strong> Configure OANDA practice credentials before using account and trade actions. No live-account trading is intended.</p></section>
+</main>
+<div th:replace="~{fragments :: footer}"></div>
+</body></html>

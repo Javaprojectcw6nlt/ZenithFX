@@ -1,0 +1,138 @@
+ZENITHFX — COMPLETE SETUP, RUNNING & SUBMISSION GUIDE
+=====================================================
+
+A. OPEN THE PROJECT
+1. Extract ZenithFX-Project.zip into C:\JavaProjects\ZenithFX.
+2. Start VS Code.
+3. File > Open Folder > C:\JavaProjects\ZenithFX.
+4. If VS Code asks whether you trust the folder, choose the appropriate trust option.
+5. Wait for Java and Maven project import to finish.
+
+B. CONFIGURE OANDA
+1. Sign in to OANDA and use a PRACTICE account only.
+2. Generate a practice API token from the OANDA account settings.
+3. In the project root, copy:
+      application-local.example.properties
+   and rename the copy to:
+      application-local.properties
+4. Open application-local.properties.
+5. Replace the placeholder account ID and token with your own practice values.
+6. Replace app.creator-line with the real names and Neptun codes of all group members.
+7. Save. This local file is ignored by Git. Do not add it to GitHub.
+8. If your lecturer expects login details in the PDF, follow their instructions carefully.
+   Never publish API tokens or passwords in a public repository or screenshots.
+
+C. FIRST BUILD (WINDOWS)
+Open Terminal > New Terminal in VS Code. Use PowerShell or Command Prompt.
+Run one command at a time:
+
+    java -version
+    javac -version
+    .\mvnw.cmd -version
+    .\mvnw.cmd test
+
+The first Maven command may download Maven. The test/build may download Java dependencies.
+Keep internet access enabled. If PowerShell says scripts are disabled, use the
+VS Code terminal profile "Command Prompt", or run the same .cmd file from CMD.
+
+D. RUN THE WEBSITE
+    .\mvnw.cmd spring-boot:run
+
+When startup finishes, open:
+    http://localhost:8080
+
+Use Ctrl+C in the terminal to stop the server.
+
+E. CHECK THE PAGES
+1. Home: inspect the responsive ZenithFX dark theme.
+2. HNB SOAP: choose currency, start date and end date; fetch rates; inspect table/chart.
+3. Account: refresh account summary.
+4. Live Prices: select instrument and request current pricing.
+5. History: select instrument and granularity; request last 10 candles.
+6. Positions: load the current open positions.
+7. Trade Desk: only after verifying the PRACTICE account, test a small order if permitted.
+   Positive units = long; negative units = short. Close only a practice trade by its Trade ID.
+8. Replace the footer's placeholder creator line before screenshots.
+
+F. COMMON ISSUES
+- "OANDA is not configured": application-local.properties is missing, misspelled,
+  not in the project root, or contains placeholders.
+- HTTP 401: practice token is invalid/expired or copied incorrectly.
+- HTTP 403: token/account permissions may be insufficient.
+- HTTP 400: inspect the displayed OANDA response; check instrument and units.
+- HNB error: verify internet connection and current MNB SOAP endpoint / SOAPAction.
+  The upstream service can change or be temporarily unavailable.
+- Port 8080 already in use: stop another app using it, or change server.port in
+  src/main/resources/application.properties.
+- Maven download error: retry with internet access; verify Windows date/time and proxy.
+- Java version mismatch: ensure java and javac both resolve to JDK 25 in the terminal.
+- Don't share tokens, account passwords, or unredacted configuration screenshots.
+
+G. BUILD THE REQUIRED EXECUTABLE
+From the project root:
+    .\mvnw.cmd clean package
+
+The built file should be:
+    target\homework.jar
+
+Copy it to the repository root:
+    copy target\homework.jar homework.jar
+
+Then test the exact lecturer command:
+    java -jar homework.jar
+
+Open http://localhost:8080 and repeat key checks after launching the JAR.
+Do not include target/ in Git history unnecessarily; the final root homework.jar is
+specifically required by the lecturer.
+
+H. GITHUB — DO NOT COMMIT EVERYTHING IN ONE STEP
+The lecturer requires at least five meaningful commits and visible teamwork.
+Example sequence (adapt to actual progress; do not claim a teammate did work they did not do):
+1. "Create Spring Boot project structure and configuration"
+2. "Build responsive ZenithFX homepage and navigation"
+3. "Implement HNB SOAP exchange-rate page and chart"
+4. "Integrate OANDA account, pricing and candle endpoints"
+5. "Add position management, trade actions and error handling"
+6. "Add tests and project documentation"
+7. "Package homework.jar and finalize screenshots"
+
+For collaboration, work with the actual assigned partner, use branches/pull requests,
+and describe which person implemented which parts. If you are allowed to work alone,
+follow the lecturer's special two-account instruction. Do not invent contributors.
+Before publishing, inspect the staged changes. Make sure application-local.properties,
+API tokens, passwords, and personal secrets are not committed.
+
+I. DOCUMENTATION (MANDATORY, MINIMUM 10 PDF PAGES)
+Create a PDF named Name-NeptunCode.pdf and submit it to Teams as instructed.
+The assignment asks for screenshots and detailed implementation explanations.
+Suggested structure:
+1. Cover page, group members, Neptun codes, project title
+2. Requirements summary and application architecture
+3. Theme choice: ZenithFX, responsive design and page navigation
+4. Home page screenshots and explanation
+5. HNB SOAP request/response and exchange-rate chart
+6. OANDA account summary
+7. Current price page
+8. Historical candle page and granularity
+9. Open positions and trade opening / closing flow (practice only)
+10. GitHub repository, commit history and collaboration evidence
+11. Build/test procedure and Java 25 `java -jar homework.jar` evidence
+12. Limitations, testing notes and individual contributions
+
+The creator names and Neptun codes must appear at the bottom of every application page.
+The assignment also says to give the GitHub URL and OANDA account login details in the PDF.
+Follow the lecturer's exact submission guidance and never disclose API tokens. If unclear,
+ask the lecturer how they want account login details submitted securely.
+
+J. BEFORE SUBMISSION
+[ ] Confirm every mandatory requirement against the lecturer's current document.
+[ ] Test the app from source and from homework.jar using Java 25.
+[ ] Test SOAP data retrieval and all OANDA endpoints.
+[ ] Use only OANDA practice account for orders.
+[ ] Replace placeholder creator names and Neptun codes.
+[ ] Make at least five real, meaningful commits.
+[ ] Public GitHub repository is accessible to the lecturer.
+[ ] No tokens or passwords in Git history, code, screenshots, or README.
+[ ] homework.jar is in the repository root.
+[ ] PDF is 10+ pages, includes screenshots, GitHub URL, implementation details and contributions.
+[ ] Submit only the documentation to Teams, as specified by the assignment.

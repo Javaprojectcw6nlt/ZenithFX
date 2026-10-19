@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header(active)" class="topbar">
+  <a class="brand" href="/"><span class="brand-mark">▲</span><span>Zenith<span class="brand-accent">FX</span><small>FOREX INTELLIGENCE</small></span></a>
+  <nav class="nav">
+    <a href="/" th:classappend="${active == 'home'} ? ' active'">Home</a>
+    <a href="/soap" th:classappend="${active == 'soap'} ? ' active'">HNB SOAP</a>
+    <a href="/account" th:classappend="${active == 'account'} ? ' active'">Account</a>
+    <a href="/prices" th:classappend="${active == 'prices'} ? ' active'">Live Prices</a>
+    <a href="/history" th:classappend="${active == 'history'} ? ' active'">History</a>
+    <a href="/positions" th:classappend="${active == 'positions'} ? ' active'">Positions</a>
+    <a href="/trade" th:classappend="${active == 'trade'} ? ' active'">Trade</a>
+  </nav>
+</header>
+<footer th:fragment="footer" class="footer">
+  <span>© 2026 ZenithFX · Academic project</span>
+  <span class="creator-line" th:text="${creatorLine}">Creator Name - NEPTUN_CODE | Teammate Name - NEPTUN_CODE</span>
+</footer>
+</body>
+</html>
