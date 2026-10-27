@@ -22,11 +22,14 @@ public class OandaService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     private RestClient client() {
-        // UPDATED: Clearer error message for the documentation/grader
-        if (apiToken == null || apiToken.isBlank() || accountId == null || accountId.isBlank()
-            || accountId.contains("PASTE_YOUR") || apiToken.contains("PASTE_YOUR")) {
-            throw new IllegalStateException("OANDA integration is currently disabled. OANDA denied new practice API token requests during the development of this project. See the PDF documentation for details.");
+        // Simple check to ensure values are present
+        if (apiToken == null || apiToken.isBlank() || accountId == null || accountId.isBlank()) {
+            throw new IllegalStateException("OANDA credentials are missing in application.properties.");
         }
+        
+        // Clean up account ID just in case it has spaces (removes spaces but keeps dashes if they exist)
+        String cleanAccountId = accountId.replaceAll("\\s+", "");
+        
         return RestClient.builder().baseUrl(baseUrl)
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
@@ -34,11 +37,13 @@ public class OandaService {
     }
 
     public JsonNode accountSummary() {
-        return get("/v3/accounts/" + accountId + "/summary");
+        String cleanId = accountId.replaceAll("\\s+", "");
+        return get("/v3/accounts/" + cleanId + "/summary");
     }
 
     public JsonNode pricing(String instrument) {
-        return get("/v3/accounts/" + accountId + "/pricing?instruments=" + encodeInstrument(instrument));
+        String cleanId = accountId.replaceAll("\\s+", "");
+        return get("/v3/accounts/" + cleanId + "/pricing?instruments=" + encodeInstrument(instrument));
     }
 
     public JsonNode candles(String instrument, String granularity) {
@@ -47,11 +52,12 @@ public class OandaService {
     }
 
     public JsonNode positions() {
-        return get("/v3/accounts/" + accountId + "/openPositions");
+        String cleanId = accountId.replaceAll("\\s+", "");
+        return get("/v3/accounts/" + cleanId + "/openPositions");
     }
 
     public JsonNode openMarketOrder(String instrument, long units) {
-        if (units == 0) throw new IllegalArgumentException("Quantity must not be zero. Positive units open long; negative units open short.");
+        if (units == 0) throw new IllegalArgumentException("Quantity must not be zero.");
         Map<String, Object> order = new LinkedHashMap<>();
         order.put("order", Map.of(
             "type", "MARKET",
@@ -60,11 +66,13 @@ public class OandaService {
             "timeInForce", "FOK",
             "positionFill", "DEFAULT"
         ));
-        return post("/v3/accounts/" + accountId + "/orders", order);
+        String cleanId = accountId.replaceAll("\\s+", "");
+        return post("/v3/accounts/" + cleanId + "/orders", order);
     }
 
     public JsonNode closeTrade(long tradeId) {
-        return put("/v3/accounts/" + accountId + "/trades/" + tradeId + "/close", Map.of("units", "ALL"));
+        String cleanId = accountId.replaceAll("\\s+", "");
+        return put("/v3/accounts/" + cleanId + "/trades/" + tradeId + "/close", Map.of("units", "ALL"));
     }
 
     private JsonNode get(String path) {
