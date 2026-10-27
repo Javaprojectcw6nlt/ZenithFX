@@ -2,11 +2,15 @@ package com.zenithfx.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.oanda.v20.Context;
+import com.oanda.v20.account.AccountID;
+import com.oanda.v20.account.AccountSummary;
+import com.oanda.v20.instrument.Candlestick;
+import com.oanda.v20.instrument.InstrumentCandlesRequest;
+import com.oanda.v20.primitives.InstrumentName;
+import com.oanda.v20.pricing.ClientPrice;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.util.*;
 
@@ -21,100 +25,121 @@ public class OandaService {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private RestClient client() {
-        // Simple check to ensure values are present
+    private Context getContext() {
         if (apiToken == null || apiToken.isBlank() || accountId == null || accountId.isBlank()) {
             throw new IllegalStateException("OANDA credentials are missing in application.properties.");
         }
-        
-        // Clean up account ID just in case it has spaces (removes spaces but keeps dashes if they exist)
-        String cleanAccountId = accountId.replaceAll("\\s+", "");
-        
-        return RestClient.builder().baseUrl(baseUrl)
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
-            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+        return new Context(baseUrl, apiToken);
     }
 
-    public JsonNode accountSummary() {
-        String cleanId = accountId.replaceAll("\\s+", "");
-        return get("/v3/accounts/" + cleanId + "/summary");
-    }
-
-    public JsonNode pricing(String instrument) {
-        String cleanId = accountId.replaceAll("\\s+", "");
-        return get("/v3/accounts/" + cleanId + "/pricing?instruments=" + encodeInstrument(instrument));
-    }
-
-    public JsonNode candles(String instrument, String granularity) {
-        String safeGranularity = (granularity == null || !granularity.matches("[A-Z]{1,2}")) ? "D" : granularity;
-        return get("/v3/instruments/" + encodeInstrument(instrument) + "/candles?count=10&granularity=" + safeGranularity + "&price=M");
-    }
-
-    public JsonNode positions() {
-        String cleanId = accountId.replaceAll("\\s+", "");
-        return get("/v3/accounts/" + cleanId + "/openPositions");
-    }
-
-    public JsonNode openMarketOrder(String instrument, long units) {
-        if (units == 0) throw new IllegalArgumentException("Quantity must not be zero.");
-        Map<String, Object> order = new LinkedHashMap<>();
-        order.put("order", Map.of(
-            "type", "MARKET",
-            "instrument", normalizeInstrument(instrument),
-            "units", Long.toString(units),
-            "timeInForce", "FOK",
-            "positionFill", "DEFAULT"
-        ));
-        String cleanId = accountId.replaceAll("\\s+", "");
-        return post("/v3/accounts/" + cleanId + "/orders", order);
-    }
-
-    public JsonNode closeTrade(long tradeId) {
-        String cleanId = accountId.replaceAll("\\s+", "");
-        return put("/v3/accounts/" + cleanId + "/trades/" + tradeId + "/close", Map.of("units", "ALL"));
-    }
-
-    private JsonNode get(String path) {
-        try {
-            String body = client().get().uri(path).retrieve().body(String.class);
-            return mapper.readTree(body == null ? "{}" : body);
-        } catch (RestClientResponseException e) {
-            throw new IllegalStateException("OANDA API error (HTTP " + e.getStatusCode().value() + "): " + e.getResponseBodyAsString());
-        } catch (Exception e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
-    }
-
-    private JsonNode post(String path, Object payload) {
-        try {
-            String body = client().post().uri(path).contentType(MediaType.APPLICATION_JSON).body(payload).retrieve().body(String.class);
-            return mapper.readTree(body == null ? "{}" : body);
-        } catch (RestClientResponseException e) {
-            throw new IllegalStateException("OANDA API error (HTTP " + e.getStatusCode().value() + "): " + e.getResponseBodyAsString());
-        } catch (Exception e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
-    }
-
-    private JsonNode put(String path, Object payload) {
-        try {
-            String body = client().put().uri(path).contentType(MediaType.APPLICATION_JSON).body(payload).retrieve().body(String.class);
-            return mapper.readTree(body == null ? "{}" : body);
-        } catch (RestClientResponseException e) {
-            throw new IllegalStateException("OANDA API error (HTTP " + e.getStatusCode().value() + "): " + e.getResponseBodyAsString());
-        } catch (Exception e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
-    }
-
-    private String encodeInstrument(String instrument) {
-        return normalizeInstrument(instrument);
-    }
-
+    // Helper to clean up instrument names
     private String normalizeInstrument(String instrument) {
         String safe = instrument == null ? "EUR_USD" : instrument.toUpperCase(Locale.ROOT).replace('/', '_').replaceAll("[^A-Z_]", "");
         if (!safe.matches("[A-Z]{3}_[A-Z]{3}")) throw new IllegalArgumentException("Choose a valid instrument such as EUR_USD.");
         return safe;
+    }
+
+    // Helper to handle the SDK's null error bug on Java 25
+    private IllegalStateException handleSdkError(Exception e, String action) {
+        String msg = e.getMessage();
+        if (msg == null || msg.isBlank()) {
+            return new IllegalStateException("OANDA SDK Error (" + action + "): The OANDA server rejected the request. This usually means the Account ID is in the wrong format (e.g., missing dashes like 101-004-1234567-001) or the API token is invalid.");
+        }
+        return new IllegalStateException("OANDA SDK Error (" + action + "): " + msg);
+    }
+
+    public JsonNode accountSummary() {
+        try {
+            Context ctx = getContext();
+            String cleanId = accountId.replaceAll("\\s+", "");
+            AccountSummary summary = ctx.account.summary(new AccountID(cleanId)).getAccount();
+            return mapper.valueToTree(summary);
+        } catch (Exception e) {
+            throw handleSdkError(e, "Account");
+        }
+    }
+
+    public JsonNode pricing(String instrument) {
+        try {
+            Context ctx = getContext();
+            String cleanId = accountId.replaceAll("\\s+", "");
+            String safeInstrument = normalizeInstrument(instrument);
+            List<ClientPrice> prices = ctx.pricing.get(new AccountID(cleanId), new InstrumentName(safeInstrument)).getPrices();
+            Map<String, Object> response = new HashMap<>();
+            response.put("prices", prices);
+            return mapper.valueToTree(response);
+        } catch (Exception e) {
+            throw handleSdkError(e, "Pricing");
+        }
+    }
+
+    public JsonNode candles(String instrument, String granularity) {
+        try {
+            Context ctx = getContext();
+            String safeGranularity = (granularity == null || !granularity.matches("[A-Z]{1,2}")) ? "D" : granularity;
+            String safeInstrument = normalizeInstrument(instrument);
+
+            InstrumentCandlesRequest request = new InstrumentCandlesRequest(new InstrumentName(safeInstrument));
+            request.setGranularity(com.oanda.v20.instrument.CandlestickGranularity.valueOf(safeGranularity));
+            request.setCount(10);
+            request.setPrice(com.oanda.v20.instrument.CandlestickPrice.Types.MID);
+
+            List<Candlestick> candleList = ctx.instrument.candles(request).getCandles();
+            Map<String, Object> response = new HashMap<>();
+            response.put("candles", candleList);
+            return mapper.valueToTree(response);
+        } catch (Exception e) {
+            throw handleSdkError(e, "Candles");
+        }
+    }
+
+    public JsonNode positions() {
+        try {
+            Context ctx = getContext();
+            String cleanId = accountId.replaceAll("\\s+", "");
+            var positions = ctx.position.listOpen(new AccountID(cleanId)).getPositions();
+            Map<String, Object> response = new HashMap<>();
+            response.put("positions", positions);
+            return mapper.valueToTree(response);
+        } catch (Exception e) {
+            throw handleSdkError(e, "Positions");
+        }
+    }
+
+    public JsonNode openMarketOrder(String instrument, long units) {
+        if (units == 0) throw new IllegalArgumentException("Quantity must not be zero.");
+        try {
+            Context ctx = getContext();
+            String cleanId = accountId.replaceAll("\\s+", "");
+            String safeInstrument = normalizeInstrument(instrument);
+
+            com.oanda.v20.order.MarketOrderRequest orderRequest = new com.oanda.v20.order.MarketOrderRequest();
+            orderRequest.setInstrument(new InstrumentName(safeInstrument));
+            orderRequest.setUnits(new com.oanda.v20.primitives.DecimalNumber(units));
+            orderRequest.setTimeInForce(com.oanda.v20.order.OrderTimeInForce.FOK);
+
+            var transaction = ctx.order.create(new AccountID(cleanId), orderRequest);
+            Map<String, Object> response = new HashMap<>();
+            response.put("orderCreateTransaction", transaction.getOrderCreateTransaction());
+            return mapper.valueToTree(response);
+        } catch (Exception e) {
+            throw handleSdkError(e, "Open Order");
+        }
+    }
+
+    public JsonNode closeTrade(long tradeId) {
+        try {
+            Context ctx = getContext();
+            String cleanId = accountId.replaceAll("\\s+", "");
+            com.oanda.v20.trade.TradeCloseRequest request = new com.oanda.v20.trade.TradeCloseRequest(new com.oanda.v20.trade.TradeID(String.valueOf(tradeId)));
+            request.setUnits(com.oanda.v20.trade.TradeCloseRequest.Units.ALL);
+
+            var transaction = ctx.trade.close(new AccountID(cleanId), request);
+            Map<String, Object> response = new HashMap<>();
+            response.put("closeTransaction", transaction.getOrderCreateTransaction());
+            return mapper.valueToTree(response);
+        } catch (Exception e) {
+            throw handleSdkError(e, "Close Trade");
+        }
     }
 }

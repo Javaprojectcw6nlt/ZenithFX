@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.zenithfx.service.HnbSoapService;
 import com.zenithfx.service.OandaService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class ApiController {
         this.oanda = oanda;
     }
 
+    // --- SOAP Endpoint ---
     @GetMapping("/hnb")
     public Map<String, Object> hnb(
         @RequestParam(defaultValue = "EUR") String currency,
@@ -29,11 +31,14 @@ public class ApiController {
         return Map.of("currency", currency, "startDate", startDate, "endDate", endDate, "rates", rates);
     }
 
+    // --- OANDA Endpoints (Now powered by the SDK) ---
     @GetMapping("/oanda/account")
     public JsonNode account() { return oanda.accountSummary(); }
 
     @GetMapping("/oanda/pricing")
-    public JsonNode pricing(@RequestParam(defaultValue = "EUR_USD") String instrument) { return oanda.pricing(instrument); }
+    public JsonNode pricing(@RequestParam(defaultValue = "EUR_USD") String instrument) { 
+        return oanda.pricing(instrument); 
+    }
 
     @GetMapping("/oanda/candles")
     public JsonNode candles(@RequestParam(defaultValue = "EUR_USD") String instrument,
@@ -52,8 +57,9 @@ public class ApiController {
     @PostMapping("/oanda/trades/{tradeId}/close")
     public JsonNode closeTrade(@PathVariable long tradeId) { return oanda.closeTrade(tradeId); }
 
+    // --- Bulletproof Error Handling ---
     @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
-    @ResponseStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleKnownErrors(RuntimeException ex) {
         return Map.of("error", ex.getMessage() == null ? "Request failed." : ex.getMessage());
     }
