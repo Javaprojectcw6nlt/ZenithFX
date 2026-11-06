@@ -68,7 +68,10 @@ public class OandaService {
     public JsonNode candles(String instrument, String granularity) {
         try {
             String safeInstrument = normalizeInstrument(instrument);
-            String safeGranularity = (granularity == null || !granularity.matches("[A-Z]{1,2}")) ? "D" : granularity;
+            // FIX: a granularity is one letter followed by up to two digits (D, W, M, H1, H4, M5, M15 ...).
+            // The old pattern "[A-Z]{1,2}" rejected every value containing a digit and silently used "D".
+            String upperGranularity = granularity == null ? "" : granularity.trim().toUpperCase();
+            String safeGranularity = upperGranularity.matches("[A-Z][0-9]{0,2}") ? upperGranularity : "D";
             String body = getClient().get()
                     .uri("/v3/instruments/" + safeInstrument + "/candles?count=10&granularity=" + safeGranularity + "&price=M")
                     .retrieve().body(String.class);

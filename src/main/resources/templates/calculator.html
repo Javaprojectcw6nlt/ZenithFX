@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator · ZenithFX</title>
+<link rel="stylesheet" href="/css/zenith.css">
+</head>
+<body>
+<div th:replace="~{fragments :: header('calculator')}"></div>
+<main class="container page-container">
+  <div class="page-heading">
+    <span class="eyebrow">TEST MENU</span>
+    <h1>Four-operation <span class="gradient-text">Calculator</span></h1>
+    <p>A small form application that is covered by JUnit and MockMvc tests.</p>
+  </div>
+  <section class="panel">
+    <form id="calcForm" class="stack-form" method="post" th:action="@{/calculator}">
+      <label>First number
+        <input id="a" name="a" type="text" inputmode="decimal" th:value="${a}" required>
+      </label>
+      <label>Operation
+        <select id="operation" name="operation">
+          <option value="add" th:selected="${operation == 'add'}">Add (+)</option>
+          <option value="subtract" th:selected="${operation == 'subtract'}">Subtract (−)</option>
+          <option value="multiply" th:selected="${operation == 'multiply'}">Multiply (×)</option>
+          <option value="divide" th:selected="${operation == 'divide'}">Divide (÷)</option>
+        </select>
+      </label>
+      <label>Second number
+        <input id="b" name="b" type="text" inputmode="decimal" th:value="${b}" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Calculate</button>
+    </form>
+    <div th:if="${result != null}" id="calcResult" class="status" th:text="'Result: ' + ${result}">Result</div>
+    <div th:if="${error != null}" id="calcError" class="status" style="color:#ff8b8b" th:text="${error}">Error</div>
+  </section>
+</main>
+<div th:replace="~{fragments :: footer}"></div>
+</body>
+</html>

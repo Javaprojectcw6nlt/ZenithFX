@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 @ControllerAdvice
 public class PageModelAdvice {
-    @Value("${app.creator-line:Creator Name - NEPTUN_CODE | Teammate Name - NEPTUN_CODE}")
+    @Value("${app.creator-line:Abdurrahman Umar Baba - Cw6nlt }")
     private String creatorLine;
 
     @ModelAttribute("creatorLine")
